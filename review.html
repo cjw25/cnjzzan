@@ -29,7 +29,7 @@ footer{text-align:center;color:#6a7f90;font-size:12px;padding:22px 16px 55px}
 <script>
 "use strict";
 const DB=JSON.parse(document.getElementById('db').textContent).items;
-const SESSIONS_KEY="security-v1-daily-progress-v1", REVIEW_KEY="security-v1-recall-review-v1", MEMORY_KEY="security-v1-memory-ratings-1";
+const SESSIONS_KEY="security-v1-daily-progress-v1", REVIEW_KEY="security-v1-recall-review-v1", MEMORY_KEY="security-v1-memory-ratings-1", REVIEW_ACTIVITY_KEY="security-v1-review-activity-v1";
 function read(k,def){try{let v=JSON.parse(localStorage.getItem(k));return v===null?def:v}catch(e){return def}}
 function write(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -108,6 +108,7 @@ function rate(ok){if(!revealed||pos>=deck.length)return;const id=deck[pos],x=que
  }else{x.step=0;x.done=false;x.due=now;x.lastFailed=now;x.lastPassed=null}
  x.lastReview=now;x.attempts=(x.attempts||0)+1;
  queue[id]=x;write(REVIEW_KEY,queue);
+ const activity=read(REVIEW_ACTIVITY_KEY,{}),day=activity[now]||{reviewedIds:{}};day.reviewedIds=day.reviewedIds||{};day.reviewedIds[id]={rated:ok?"remembered":"retry",at:Date.now()};activity[now]=day;write(REVIEW_ACTIVITY_KEY,activity);
  const mem=read(MEMORY_KEY,{});let before=mem[id]||{};mem[id]={...before,rating:ok?"known":"retry",lastDate:now,lastAt:Date.now(),count:(before.count||0)+1};write(MEMORY_KEY,mem);
  pos++;revealed=false;show();draw();
 }

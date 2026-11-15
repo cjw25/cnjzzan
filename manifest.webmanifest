@@ -1,0 +1,20 @@
+{
+  "name": "2026 정보보안산업기사 과정평가형 V1 실전 모의고사",
+  "short_name": "보안 V1 모의고사",
+  "description": "1차 40문항·2차 20문항, 모바일 실전 풀이와 자동 채점",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0f2039",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

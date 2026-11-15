@@ -48,6 +48,7 @@ footer{text-align:center;color:#6f8194;padding:24px 17px 50px;font-size:12px} .a
 var MEMORY=JSON.parse(document.getElementById("memory-data").textContent);
 var CARDS=MEMORY.cards, COMPARISONS=MEMORY.comparisons, STATUS_KEY="security-v1-memory-ratings-1", SESSION_KEY="security-v1-memory-session-1";
 var status=readLocal(STATUS_KEY,{}), active=readLocal(SESSION_KEY,null), revealed=false;
+var STUDY_ACTIVITY_KEY='security-v1-memory-activity-v1';
 var topics=[...new Set(CARDS.map(function(c){return c.topic}))];
 function readLocal(k, fallback){try{var v=JSON.parse(localStorage.getItem(k));return v===null?fallback:v}catch(e){return fallback}}
 function saveLocal(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
@@ -67,7 +68,9 @@ var ids=pool.slice(0,count).map(function(c){return c.id});
 if(active&&!active.finished&&active.day===today()&&active.category===cat&&active.onlyRetry===onlyRetry&&active.count===count&&active.pos<active.ids.length){revealed=false;renderStudy();document.getElementById("study").scrollIntoView({behavior:"smooth"});return}
 active={day:today(),category:cat,count:count,onlyRetry:onlyRetry,ids:ids,pos:0,finished:false};saveLocal(SESSION_KEY,active);revealed=false;renderStudy();document.getElementById("study").scrollIntoView({behavior:"smooth"})}
 function reveal(){revealed=true;renderStudy()}
-function mark(rating){if(!active)return;var id=active.ids[active.pos];status[id]={rating:rating,lastDate:today(),lastAt:Date.now(),count:((status[id]||{}).count||0)+1};saveLocal(STATUS_KEY,status);active.pos++;revealed=false;
+function mark(rating){if(!active||!revealed||active.finished||active.pos>=active.ids.length)return;var id=active.ids[active.pos];status[id]={rating:rating,lastDate:today(),lastAt:Date.now(),count:((status[id]||{}).count||0)+1};saveLocal(STATUS_KEY,status);
+var date=today(), activity=readLocal(STUDY_ACTIVITY_KEY,{}),day=activity[date]||{ratedIds:{}};day.ratedIds=day.ratedIds||{};day.ratedIds[id]=rating;activity[date]=day;saveLocal(STUDY_ACTIVITY_KEY,activity);
+active.pos++;revealed=false;
 if(active.pos>=active.ids.length)active.finished=true;saveLocal(SESSION_KEY,active);updateStats();renderStudy()}
 function skipCard(){if(!active)return;active.pos++;revealed=false;if(active.pos>=active.ids.length)active.finished=true;saveLocal(SESSION_KEY,active);renderStudy()}
 function stopDeck(){active=null;revealed=false;saveLocal(SESSION_KEY,active);renderStudy()}

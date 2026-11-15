@@ -24,10 +24,10 @@ footer{text-align:center;color:#6f8194;padding:24px 17px 50px;font-size:12px} .a
 @media(max-width:650px){.groups{grid-template-columns:1fr 1fr}.panel{padding:15px}.hero{padding:25px 20px}.flash{padding:20px 15px;min-height:250px}.flash .prompt{font-size:18px}.stat{padding:12px 9px}.stat b{font-size:25px}.brand{font-size:13px}.head{align-items:flex-start;padding-top:15px;padding-bottom:15px;flex-direction:column}.nav{width:100%}.nav a{flex:1;text-align:center}.controls{align-items:stretch}.controls label{width:100%}select{width:100%;flex:auto}}
 @media(max-width:360px){.groups{grid-template-columns:1fr}.stats{gap:6px}}
 </style></head><body>
-<header><div class="wrap head"><div class="brand">🛡 정보보안산업기사 V1 · 핵심 암기장</div><nav class="nav"><a href="./index.html">모의고사</a><a href="./memorize.html" class="active" aria-current="page">암기장</a><a href="./archive.html">기존 1회분</a></nav></div></header>
+<header><div class="wrap head"><div class="brand">🛡 정보보안산업기사 V1 · 핵심 암기장</div><nav class="nav"><a href="./index.html">모의고사</a><a href="./memorize.html" class="active" aria-current="page">암기장</a><a href="./review.html">오답 복습</a><a href="./archive.html">기존 1회분</a></nav></div></header>
 <main>
 <section class="hero"><span class="eyebrow">2026 과정평가형 · V1</span><h1>알바 중 10분도,<br>기본 개념은 확실하게</h1><p>공식 V1 출제기준의 8개 주요항목·24개 세부항목에 맞춘 학습용 핵심 암기 카드입니다. 정의를 보고 용어를 말한 다음 정답을 확인하세요.</p><div class="badgebar"><span id="total-badge">146개 암기 개념</span><span>난이도 하~중</span><span>1차·2차 공통 대비</span></div></section>
-<div class="stats" id="stats"><div class="stat"><b>—</b><span>전체 개념</span></div></div>
+<div class="panel" style="background:#eef9f7;border:1.5px solid #adddd8"><div class="hrow"><div><h2>🔁 어제 틀린 개념, 오늘 다시 확인</h2><p class="sub">모의고사에서 틀린 문제를 자동으로 모아 복습하고, 다음 날·3일 뒤·7일 뒤 다시 확인합니다.</p></div><a class="btn" href="./review.html">오답 재확인 시작</a></div></div><div class="stats" id="stats"><div class="stat"><b>—</b><span>전체 개념</span></div></div>
 <div class="panel" id="start"><div class="hrow"><div><h2>오늘의 암기 시작</h2><p class="sub">정답을 먼저 보지 않고 머릿속으로 설명해 보세요.</p></div><span class="small muted" id="day-label"></span></div>
 <div class="groups"><button class="choice primary" type="button" onclick="startDeck(10,false)"><strong>10개 · 약 10분</strong><small>알바 중이나 이동 중 가볍게 암기</small></button>
 <button class="choice" type="button" onclick="startDeck(20,false)"><strong>20개 · 집중 복습</strong><small>시간이 있을 때 조금 더 깊게</small></button>

@@ -43,7 +43,7 @@ function errorsFor(s,q){
  let ans=s.answers&&s.answers[q.id], ids=[];
  if(q.kind==="연결형"){
   const a=Array.isArray(ans)?ans:[-1,-1,-1];
-  (q.terms||[]).forEach((t,i)=>{if(Number(a[i])!==q.correct[i]){let item=DB.find(x=>x.term===t);if(item)ids.push(item.id)}});
+  (q.terms||[]).forEach((t,i)=>{if(!Number.isInteger(a[i])||a[i]<0||a[i]>2||a[i]!==q.correct[i]){let item=DB.find(x=>x.term===t);if(item)ids.push(item.id)}});
  }else{
   let correct= false;
   if(q.kind==="단답형")correct=answerPresent(ans)&&shortRight(ans,q.correct);

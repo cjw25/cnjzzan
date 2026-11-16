@@ -37,7 +37,7 @@ function current(){return questions[idx]}
 function savedAnswer(q){return answers[q.id]}
 function setAnswer(qid,value){answers[qid]=value;refreshProgress()}
 function updateMatch(qid,i,val){const q=questions.find(x=>x.id===qid);let a=Array.isArray(answers[qid])?[...answers[qid]]:Array(q.parts.length).fill(-1);a[i]=Number(val);answers[qid]=a;refreshProgress()}
-function filled(q){const a=savedAnswer(q);if(q.kind==="match"||q.kind==="bank-multi")return Array.isArray(a)&&a.length===3&&a.every(x=>Number.isInteger(x)&&x>=0);return a!==undefined&&a!==null&&String(a).trim()!==""}
+function filled(q){const a=savedAnswer(q);if(q.kind==="match"||q.kind==="bank-multi")return Array.isArray(a)&&a.length===3&&a.every(x=>Number.isInteger(x)&&x>=(q.kind==="match"?0:1));if(q.kind==="bank")return Number.isInteger(a)&&a>=1&&a<=39;return a!==undefined&&a!==null&&String(a).trim()!==""}
 function refreshProgress(){document.getElementById("progress").style.width=Math.round(100*questions.filter(filled).length/questions.length)+"%"}
 function options(q){
  const ans=savedAnswer(q);

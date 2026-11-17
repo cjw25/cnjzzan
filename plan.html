@@ -22,7 +22,7 @@ footer{text-align:center;color:#728397;font-size:12px;padding:20px 18px 60px}
 <div class="panel"><div class="row"><div><h2>17일 공부 달력</h2><p class="muted">날짜를 누르면 할 일이 표시됩니다. NCS 기본개념 모의고사 40·20문항을 제출하면 체크리스트와 학습 점수에 반영됩니다.</p></div><span class="badgetext" id="today-status"></span></div><div class="calendar" id="calendar"></div></div>
 <div class="columns"><div><div class="panel anchor" id="daily"><div class="row"><div><div class="todayline" id="selected-date"></div><h2 id="daily-title"></h2></div><span class="badgetext" id="work-label"></span></div><div class="focus"><h3 id="focus-title"></h3><p id="focus-description"></p><p style="margin-top:7px"><b>암기 포인트:</b> <span id="key-terms"></span></p></div>
 <h3 style="font-size:16px">오늘의 필수 체크리스트 <span class="muted" style="font-weight:400">· 전부 자동 체크</span></h3><div class="meter"><i id="bar" style="width:0%"></i></div><div id="checklist"></div><div class="recall-panel"><h3>개념 3개를 정답 없이 직접 쓰기</h3><p class="muted">설명에 해당하는 용어를 직접 입력하세요. 세 문제를 정확히 맞히면 마지막 항목도 자동 체크됩니다.</p><div id="recall-test"></div><p id="recall-feedback" class="muted" aria-live="polite"></p></div>
-<div class="rowBtns"><a class="btn" href="./memorize.html">핵심 암기장</a><a class="btn outline" href="./diagnosis.html">진단 NCS 대조 학습</a><a class="btn gray" href="./ncs-mock.html">NCS 기본개념 40·20문항</a><a class="btn outline" href="./index.html">공개 가이드 예시</a><a class="btn outline" href="./review.html">오답 재확인</a></div>
+<div class="rowBtns"><a class="btn" href="./memorize.html">핵심 암기장</a><a class="btn outline" href="./diagnosis.html">진단 NCS 대조 학습</a><a class="btn gray" href="./ncs-mock.html">통합 NCS 실전 40·20문항</a><a class="btn outline" href="./ncs-mock-previous.html">이전 모의고사 기록</a><a class="btn outline" href="./index.html">공개 가이드 예시</a><a class="btn outline" href="./review.html">오답 재확인</a></div>
 </div>
 <div class="panel"><h2>오늘 공부 결과 기록</h2><p class="warning">NCS 기본개념 모의고사 1차 40문항·2차 20문항 점수가 자동으로 표시됩니다. 공개 평가가이드 예시 점수와 구분되며, 둘 다 실제 시험 성적이 아닙니다.</p><p class="muted">실제 공부한 내용만 적으세요. 점수가 없어도 오답과 기억나는 내용을 적으면 됩니다.</p>
 <div class="fieldrow"><div class="field"><label for="score1">1차 별도 모의고사 점수 /100</label><input id="score1" type="number" min="0" max="100" step="1" placeholder="실제 점수만"></div><div class="field"><label for="score2">2차 별도 모의고사 점수 /100</label><input id="score2" type="number" min="0" max="100" step="1" placeholder="실제 점수만"></div></div>
@@ -53,7 +53,7 @@ function escapeText(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;",
 function item(){return PLANS.find(x=>x.date===selected)}
 function record(){return log[selected]||{checks:{},score1:"",score2:"",mistakes:"",retained:"",notes:""}}
 function scoreFromSite(date,stage){
- const h=local("security-v1-ncs-basic-results-v1",[]);
+ const h=[...local("security-v1-ncs-merged-results-v2",[]),...local("security-v1-ncs-basic-results-v1",[])].sort((a,b)=>(b.finished||0)-(a.finished||0));
  const r=h.find(x=>x.stage===stage&&Number.isFinite(x.finished)&&new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(x.finished))===date);
  if(r&&Number.isFinite(r.score))return r.score;
  const a=local("security-v1-official-guide-attempts-v1",{})[date]?.[stage];return a?.finishedAt&&Number.isFinite(a.percent)?a.percent:null;
@@ -74,8 +74,8 @@ function requiredStage(p){
  return [1,2];
 }
 function examProgressFor(p){
- const h=local("security-v1-ncs-basic-results-v1",[]);
- const s=local("security-v1-ncs-basic-session-v1",null);
+ const h=[...local("security-v1-ncs-merged-results-v2",[]),...local("security-v1-ncs-basic-results-v1",[])].sort((a,b)=>(b.finished||0)-(a.finished||0));
+ const s=local("security-v1-ncs-merged-session-v2",null)||local("security-v1-ncs-basic-session-v1",null);
  const sample=local("security-v1-official-guide-attempts-v1",{})[p.date]||{};
  const day=n=>Number.isFinite(n)?new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(n)):null;
  const reports=[];
@@ -134,7 +134,7 @@ document.getElementById("daily-title").textContent=p.topic;document.getElementBy
 document.getElementById("focus-title").textContent=p.focus;document.getElementById("focus-description").textContent="오늘의 문제 과제: "+p.assignment;document.getElementById("key-terms").textContent=p.terms;
 renderChecks();renderStats();renderCalendar();
 const s1=scoreFromSite(selected,1),s2=scoreFromSite(selected,2);
-document.getElementById("automatic-scores").textContent=(s1===null&&s2===null)?"이 날짜의 모의고사 응시 기록이 없습니다.":("사이트 학습 점수: "+(s1===null?"1차 미응시":"1차 "+s1+"점")+" · "+(s2===null?"2차 미응시":"2차 "+s2+"점")+". NCS 모의고사를 우선 표시하며, 없으면 공개 예시 정답률을 표시합니다. 실제 시험 점수가 아닙니다.");
+document.getElementById("automatic-scores").textContent=(s1===null&&s2===null)?"이 날짜의 모의고사 응시 기록이 없습니다.":("사이트 학습 점수: "+(s1===null?"1차 미응시":"1차 "+s1+"점")+" · "+(s2===null?"2차 미응시":"2차 "+s2+"점")+". 통합 모의고사 성적을 우선 표시하며, 없으면 이전 모의고사 또는 공개 예시 점수를 표시합니다. 실제 시험 점수가 아닙니다.");
 for(const key of ["score1","score2","mistakes","retained","notes"])document.getElementById(key).value=r[key]??"";
 document.getElementById("save-status").textContent="점수·오답·체크 결과는 이 기기의 브라우저에 저장됩니다. ChatGPT로 자동 제출되지 않습니다."}
 function validScore(val){return val===""||(/^\d+$/.test(val)&&Number(val)>=0&&Number(val)<=100)}
@@ -192,7 +192,7 @@ function studyProof(p){
  for(const [id,v] of Object.entries(reviews))if(v?.lastReview===p.date)reviewed.add(id);
  const registered=Object.values(reviews).filter(v=>v?.concept&&(!v.source||v.source.date<=p.date)).length;
  const revTarget=Math.min(p.work?3:5,Math.max(1,registered,reviewed.size));
- const verified=local("security-v1-official-guide-attempts-v1",{})[p.date]||{};const ncsFinished=local("security-v1-ncs-basic-results-v1",[]).filter(x=>Number.isFinite(x?.finished)&&new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(x.finished))===p.date).map(x=>({percent:x.score,finishedAt:x.finished}));const finished=[...ncsFinished,...[1,2].map(stage=>verified[stage]).filter(s=>s?.finishedAt)];
+ const verified=local("security-v1-official-guide-attempts-v1",{})[p.date]||{};const ncsFinished=[...local("security-v1-ncs-merged-results-v2",[]),...local("security-v1-ncs-basic-results-v1",[])].filter(x=>Number.isFinite(x?.finished)&&new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(x.finished))===p.date).map(x=>({percent:x.score,finishedAt:x.finished}));const finished=[...ncsFinished,...[1,2].map(stage=>verified[stage]).filter(s=>s?.finishedAt)];
  const perfect=finished.length>0&&finished.every(s=>s.percent===100)&&registered===0;
  const quiz=local(QUIZ_KEY,{})[p.date]||{};
  const recalled=studyRecallIds(p).filter(id=>quiz.correctIds?.[id]).length;

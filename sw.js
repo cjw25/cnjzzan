@@ -1,4 +1,4 @@
-const CACHE_NAME='security-v1-mobile-2026-23';
+const CACHE_NAME='security-v1-mobile-2026-24';
 const ASSETS=['./','./index.html','./archive.html','./ncs-verified.html','./ncs-mock.html','./ncs-mock-v2.html','./ncs-mock-previous.html','./memorize.html','./review.html','./plan.html','./diagnosis.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));

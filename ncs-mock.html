@@ -66,25 +66,67 @@ const EXPANDED_FIRST=(()=>{
    return {id,type:'4지택일',stem,topic,sub:q.sub||'기본개념',crit:'자체 제작 변형',code:'V'+id,answer:correct,choices:order.map((n,j)=>'①②③④'[j]+' '+labels[n]),pairs:null,match:null,why:q.why||('정답: '+correctLabel),wrong:q.wrong||'유사 개념을 비교하세요.',memo:q.memo||'',level:q.level||'하',accept:[],ncsSource:{module:'기존 예상문제 기반 변형',page:null,origin:'NCS 원문 대조 미완료 · 기존 문제 변형 · 독립된 신규 개념 아님'},focus:q.focus||'contrast'};
  }));
 })();
-const RECENT_KEY='security-v1-recent-papers-v2';
+
+const PRACTICAL_FIXED_SCENARIOS={
+ 31:'프로젝트 시작 회의에서 아직 정리되지 않은 보안 요구사항을 찾아 목록화하려 합니다. 가장 먼저 수행할 단계는?',
+ 32:'사용자가 로그인한 채 자리를 비운 후 다른 사람이 동일 세션을 이용했습니다. 일정 시간 활동이 없으면 접속을 종료하도록 하는 관리는?',
+ 33:'서로 다른 다수의 감염 단말에서 동시에 접속 요청이 폭주해 웹 서비스가 중단되었습니다. 이 공격의 약어는?',
+ 34:'서버마다 누락된 보안 업데이트가 있는지 자동으로 확인하고 설치 현황을 관리하려 합니다. 이 시스템의 약어는?',
+ 35:'사용자가 웹 사이트에서 개인 정보를 전송할 때 암호화된 통신을 제공하도록 서버를 구성했습니다. 해당 서버의 명칭은?',
+ 36:'관제 담당자가 새로운 사이버 위협을 미리 분석하고 대응하기 위한 위협 관리 체계를 도입했습니다. 이 시스템의 약어는?',
+ 37:'서버 로그와 방화벽 로그에 나타난 동일 출발지의 이벤트를 시간 순서대로 연결해 공격 여부를 판단합니다. 이 분석 방법은?',
+ 38:'보안 담당자가 서버의 설정과 네트워크 장비의 보안 설정을 점검해 약점을 목록으로 작성합니다. 이 활동은?'
+};
+const PRACTICAL_SECOND_SCENARIOS={
+ '정적 분석':'개발자가 서비스를 실행하지 않은 상태에서 소스코드의 위험한 함수 사용을 확인했습니다. 해당 분석 방법은?',
+ '권한 관리':'퇴사자에게 남아 있던 파일 접근 권한을 제거하고 부서 이동자에게 필요한 권한만 다시 부여했습니다. 이 활동은?',
+ '접근제어':'관리 서버에 허가된 계정만 접속할 수 있도록 정책을 설정했습니다. 이 보안 활동은?',
+ '스피어 피싱':'공격자가 특정 회사 인사 담당자에게 실제 채용 관련 메일처럼 위장한 메시지를 보내 계정 정보를 탈취하려 했습니다. 이 공격은?',
+ '단위 테스트':'개발자가 전체 프로그램을 통합하기 전에 특정 함수 하나의 결과가 예상과 일치하는지 검사합니다. 이 테스트는?',
+ '오탐':'정상적인 직원의 접속을 보안 장비가 공격으로 판단해 경고했습니다. 이 탐지 결과는?',
+ '백업':'랜섬웨어로 운영 데이터가 손상될 상황에 대비해 별도 저장소에 데이터 복사본을 정기적으로 보관합니다. 이 활동은?',
+ '상관분석':'웹 로그와 방화벽 로그에서 같은 IP가 짧은 시간 동안 남긴 여러 이벤트를 연결해 공격 징후를 찾습니다. 이 분석 방법은?'
+};
+function practiceClass(q){return q.practiceFocus||q.focus||'term'}
+function pickQuota(pool,quota,seed,used,missed,priority){
+ const sorted=seededShuffle(pool,seed).sort((a,b)=>{
+  if(priority){const diff=Number(missed.has(b.sourceId||b.id))-Number(missed.has(a.sourceId||a.id));if(diff)return diff}
+  return Number(used.has(a.sourceId||a.id))-Number(used.has(b.sourceId||b.id))
+ });
+ const chosen=[],seen=new Set();
+ for(const kind of ['term','contrast','scenario']){
+  for(const q of sorted.filter(x=>practiceClass(x)===kind)){
+   if(chosen.filter(x=>practiceClass(x)===kind).length>=quota[kind])break;
+   if(seen.has(q.sourceId||q.id))continue;
+   chosen.push(q);seen.add(q.sourceId||q.id)
+  }
+ }
+ if(chosen.length!==Object.values(quota).reduce((a,b)=>a+b,0))throw Error('Insufficient practice categories');
+ return seededShuffle(chosen,seed^0x9e3779b9)
+}
+
+const RECENT_KEY='security-v1-recent-papers-v3';
 function koreaDay(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
 function daySeed(day,stage){let h=2166136261;for(const c of day+':'+stage){h=Math.imul(h^c.charCodeAt(0),16777619)}return h>>>0}
 function seededShuffle(items,seed){const a=[...items];let x=seed||1;const rand=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)/4294967296};for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function buildPaper(stage){
- const day=koreaDay(), base=stage===1?D.first:D.second, extras=stage===1?EXTRA_FIRST:EXTRA_SECOND;
- const key=stage===1?'first':'second', recent=stored(RECENT_KEY,{});
- // Preserve the 1st-stage question-type distribution while varying both selection and order.
- const pool=stage===1?[...base.slice(0,20),...extras,...EXPANDED_FIRST]:[...base,...extras];
- const previous=recent[key]||{}, used=new Set(previous.day!==day?(previous.ids||[]):[]);
- const filtered=pool.filter(q=>(selectedTopic==='전체'||q.topic===selectedTopic)&&(selectedDifficulty==='전체'||q.level===selectedDifficulty));
- const available=filtered.length>=20?filtered:pool;
- const shuffled=seededShuffle(available,daySeed(day,stage));
+ const day=koreaDay(),base=stage===1?D.first:D.second,extras=stage===1?EXTRA_FIRST:EXTRA_SECOND;
+ const key=stage===1?'first':'second',recent=stored(RECENT_KEY,{}),prev=recent[key]||{};
+ const used=new Set(prev.day!==day?(prev.ids||[]):[]);
  const missed=new Set(Object.values(wrong).filter(x=>x.stage===stage).map(x=>x.q?.sourceId??x.q?.id??x.id));
- const selected=shuffled.sort((a,b)=>{if(wrongPriority){const d=Number(missed.has(b.id))-Number(missed.has(a.id));if(d)return d}return Number(used.has(a.id))-Number(used.has(b.id))}).slice(0,20);
- const fixed=stage===1?seededShuffle(base.slice(20),daySeed(day,stage+100)):[];
+ let pool=stage===1?[...base.slice(0,20),...extras]:[...base,...extras];
+ if(stage===2)pool=pool.map(q=>PRACTICAL_SECOND_SCENARIOS[q.answer]?{...q,stem:PRACTICAL_SECOND_SCENARIOS[q.answer],practiceFocus:'scenario'}:q);
+ const filtered=pool.filter(q=>(selectedTopic==='전체'||q.topic===selectedTopic)&&(selectedDifficulty==='전체'||q.level===selectedDifficulty));
+ // Enforce exam-wide 30% definition / 40% contrast / 30% scenario. 
+ const quota=stage===1?{term:7,contrast:9,scenario:4}:{term:6,contrast:8,scenario:6};
+ const enough=Object.entries(quota).every(([kind,n])=>filtered.filter(q=>practiceClass(q)===kind).length>=n);
+ const selected=pickQuota(enough?filtered:pool,quota,daySeed(day,stage),used,missed,wrongPriority);
+ const fixed=stage===1?base.slice(20).map((q,i)=>PRACTICAL_FIXED_SCENARIOS[i+21]?{...q,stem:PRACTICAL_FIXED_SCENARIOS[i+21],practiceFocus:'scenario'}:q):[];
  const paper=[...selected,...fixed].map((q,i)=>({...q,id:i+1,sourceId:q.id}));
- recent[key]={day,ids:selected.map(q=>q.id)};
- localStorage.setItem(RECENT_KEY,JSON.stringify(recent));
+ const counts=paper.reduce((acc,q)=>(acc[practiceClass(q)]=(acc[practiceClass(q)]||0)+1,acc),{});
+ const expected=stage===1?{term:12,contrast:16,scenario:12}:{term:6,contrast:8,scenario:6};
+ if(Object.keys(expected).some(k=>counts[k]!==expected[k]))throw Error('Paper mix invalid: '+JSON.stringify(counts));
+ recent[key]={day,ids:selected.map(q=>q.id)};localStorage.setItem(RECENT_KEY,JSON.stringify(recent));
  return paper;
 }
 
@@ -99,7 +141,7 @@ function fmt(seconds){let h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/6
 function remain(){return Math.max(0,5400-Math.floor((Date.now()-appState.started)/1000))}
 function ensureTimer(){clearInterval(tick);if(!appState||appState.mode!=='exam')return;tick=setInterval(()=>{if(screen!=='exam'||!appState)return;let t=remain(),node=$('timer');if(node){node.textContent=fmt(t);node.classList.toggle('urgent',t<=600)}if(t<=0)finish(true)},1000)}
 function home(){const resume=appState&&!appState.finished;const card=(stage,num,desc)=>`<article class="exam-card"><div class="mini"><span class="exam-badge">${stage}차 평가</span><span style="font-size:11px;color:#8492a1">V1 연습용</span></div><div><div class="number">${num}<span style="font-size:16px;letter-spacing:0;color:#52677b">문항</span></div><h3>${stage===1?'객관식·단답형':'통합 보기 필답형'}</h3><p>${desc}</p></div><div class="chips"><span class="chip">90분</span><span class="chip">100점</span><span class="chip">${stage===1?'4지·OX·연결·단답':'보기 39개 제공'}</span></div><button class="btn primary full" onclick="setup(${stage})">${resume&&appState.stage===stage?'시험 선택 · 이어 풀기 가능':'모의고사 시작하기'} <span aria-hidden="true">→</span></button></article>`;
-return `<section class="paper-panel" style="border-left:4px solid var(--accent);margin-bottom:14px"><b>NCS 핵심용어 · 기본개념 중심</b><p>NCS 중심으로 <b>핵심 용어·정의 60%, 개념 비교 30%, 쉬운 상황형 10%</b>로 문제은행을 다시 구성했습니다. <b>NCS 학습모듈의 평가 부분은 문제 소재에서 제외</b>했습니다. 정보시스템 진단은 16v1 사진 교재를 참고하며, 2026 출제기준의 19v2와 다릅니다.</p><div class="inline-actions"><a class="btn outline btn-small" href="./index.html">공개 예시</a><a class="btn outline btn-small" href="./plan.html">공부계획</a><a class="btn outline btn-small" href="./ncs-mock-v2.html">바로 이전 문제·성적</a><a class="btn outline btn-small" href="./ncs-mock-previous.html">70·65점 기록·해설</a></div></section><section class="hero"><div class="eyebrow">SECURITY CERTIFICATION · V1</div><h1>문제를 풀며 완성하는<br>정보보안 실전 감각</h1><p>기존 문제와 신규 기본개념 문제를 섞어 출제하며 한국시간 날짜별로 시험지 구성을 바꾸고 최근 출제 문항을 우선 제외합니다. 총 300개 문제 항목(기존 90개 + 기존 문항 변형 210개)을 사용합니다. 변형은 독립적인 신규 개념이 아니며 NCS 원문 미검증입니다. 실전 타이머·자동채점·오답복습에 적용했습니다. 관련 학습내용과 수행준거를 문항마다 표시합니다.</p><div class="tagrow"><span class="tag">1차 40문항</span><span class="tag">2차 20문항</span><span class="tag">문제 항목 300개</span><span class="tag">자동 채점</span><span class="tag">오답 저장</span></div></section>${resume?`<div class="paper-panel" style="border-left:4px solid var(--accent)"><h3>풀던 시험이 남아 있습니다 · ${appState.stage}차</h3><p>현재까지 ${Object.keys(appState.answers).length}문항에 답했습니다. 이 기기에서 계속 풀 수 있습니다.</p><div class="inline-actions"><button class="btn primary btn-small" onclick="selectedStage=${appState.stage};selectedMode='${appState.mode}';go('exam')">이어서 풀기</button><button class="btn outline btn-small" onclick="if(confirm('진행 중인 답안이 삭제됩니다.')){appState=null;save();go('home')}">진행 기록 지우기</button></div></div>`:''}<div class="section-heading"><h2>시험 선택</h2><span>매회 1차 40문항 · 2차 20문항</span></div><div class="exam-grid">${card(1,40,'4지택일 20 · O/X 5 · 연결형 5 · 단답형 10')}${card(2,20,'39개 통합 보기에서 정답을 선택하는 필답형')}</div><div class="paper-panel"><h3>학습 기록과 오답노트</h3><p>채점한 시험은 기기에 기록됩니다. 잘못 선택한 문항과 관련 수행준거를 다시 확인할 수 있습니다.</p><div class="inline-actions"><button class="btn ghost btn-small" onclick="go('history')">성적 기록 보기</button><button class="btn outline btn-small" onclick="go('wrong')">오답노트 열기 · ${Object.keys(wrong).length}문항</button></div></div>`}
+return `<section class="paper-panel" style="border-left:4px solid var(--accent);margin-bottom:14px"><b>NCS 핵심용어 · 기본개념 중심</b><p>실전형 구성으로 <b>핵심 용어·정의 30%, 개념 비교 40%, 짧은 상황형 30%</b>로 문제은행을 다시 구성했습니다. <b>NCS 학습모듈의 평가 부분은 문제 소재에서 제외</b>했습니다. 정보시스템 진단은 16v1 사진 교재를 참고하며, 2026 출제기준의 19v2와 다릅니다.</p><div class="inline-actions"><a class="btn outline btn-small" href="./index.html">공개 예시</a><a class="btn outline btn-small" href="./plan.html">공부계획</a><a class="btn outline btn-small" href="./ncs-mock-v2.html">바로 이전 문제·성적</a><a class="btn outline btn-small" href="./ncs-mock-previous.html">70·65점 기록·해설</a></div></section><section class="hero"><div class="eyebrow">SECURITY CERTIFICATION · V1</div><h1>문제를 풀며 완성하는<br>정보보안 실전 감각</h1><p>기존 문제와 신규 기본개념 문제를 섞어 출제하며 한국시간 날짜별로 시험지 구성을 바꾸고 최근 출제 문항을 우선 제외합니다. 실전 출제는 기존 90개 중 의미 있는 문제를 선별하며, 210개 단순 보기 변형은 새 문제로 계산하거나 출제하지 않습니다. 저장된 변형 항목은 별도로 남아 있습니다. 변형은 독립적인 신규 개념이 아니며 NCS 원문 미검증입니다. 실전 타이머·자동채점·오답복습에 적용했습니다. 관련 학습내용과 수행준거를 문항마다 표시합니다.</p><div class="tagrow"><span class="tag">1차 40문항</span><span class="tag">2차 20문항</span><span class="tag">문제 항목 300개</span><span class="tag">자동 채점</span><span class="tag">오답 저장</span></div></section>${resume?`<div class="paper-panel" style="border-left:4px solid var(--accent)"><h3>풀던 시험이 남아 있습니다 · ${appState.stage}차</h3><p>현재까지 ${Object.keys(appState.answers).length}문항에 답했습니다. 이 기기에서 계속 풀 수 있습니다.</p><div class="inline-actions"><button class="btn primary btn-small" onclick="selectedStage=${appState.stage};selectedMode='${appState.mode}';go('exam')">이어서 풀기</button><button class="btn outline btn-small" onclick="if(confirm('진행 중인 답안이 삭제됩니다.')){appState=null;save();go('home')}">진행 기록 지우기</button></div></div>`:''}<div class="section-heading"><h2>시험 선택</h2><span>매회 1차 40문항 · 2차 20문항</span></div><div class="exam-grid">${card(1,40,'4지택일 20 · O/X 5 · 연결형 5 · 단답형 10')}${card(2,20,'39개 통합 보기에서 정답을 선택하는 필답형')}</div><div class="paper-panel"><h3>학습 기록과 오답노트</h3><p>채점한 시험은 기기에 기록됩니다. 잘못 선택한 문항과 관련 수행준거를 다시 확인할 수 있습니다.</p><div class="inline-actions"><button class="btn ghost btn-small" onclick="go('history')">성적 기록 보기</button><button class="btn outline btn-small" onclick="go('wrong')">오답노트 열기 · ${Object.keys(wrong).length}문항</button></div></div>`}
 function setupPage(){const resume=appState&&!appState.finished&&appState.stage===selectedStage;return `<section class="setup"><button class="back" onclick="go('home')">← 홈으로</button><h1>${stageName(selectedStage)}</h1><p>${selectedStage===1?'객관식 30문항과 주관식 10문항으로 구성한 모의고사입니다.':'39개 통합 보기에서 가장 적절한 답을 선택하는 모의고사입니다.'}</p><div class="panel"><h3>시험 방식 선택</h3><div class="toggle-row"><button class="mode-btn ${selectedMode==='exam'?'selected':''}" onclick="setMode('exam')"><b>⏱ 실전 모드</b><span>90분 제한 · 종료 후 전체 해설</span></button><button class="mode-btn ${selectedMode==='learn'?'selected':''}" onclick="setMode('learn')"><b>📖 학습 모드</b><span>시간 제한 없이 필요한 문제 해설 확인</span></button></div><div class="notice"><b>문제 출제 설정</b><div style="display:grid;gap:9px;margin-top:9px"><label>학습 영역 <select style="width:100%;padding:9px" onchange="selectedTopic=this.value;render()"><option value="전체">전체 영역</option>${[...new Set([...D.first,...D.second,...EXTRA_FIRST,...EXTRA_SECOND,...EXPANDED_FIRST].map(q=>q.topic))].map(t=>`<option value="${esc(t)}" ${selectedTopic===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><label>난이도 <select style="width:100%;padding:9px" onchange="selectedDifficulty=this.value;render()"><option value="전체">전체</option>${['하','중하','중'].map(v=>`<option value="${v}" ${selectedDifficulty===v?'selected':''}>${v}</option>`).join('')}</select></label><label><input type="checkbox" ${wrongPriority?'checked':''} onchange="wrongPriority=this.checked"> 오답 문항 우선 출제</label><small>선택 영역·난이도의 문제 수가 20개 미만이면 전체 문제은행으로 보충합니다. 1차 단답·연결형 20문항은 형식 유지를 위해 고정됩니다.</small></div></div><div class="overview"><div><strong>${selectedStage===1?40:20}</strong><small>전체 문항</small></div><div><strong>100점</strong><small>연습용 만점</small></div><div><strong>${selectedMode==='exam'?'90분':'무제한'}</strong><small>풀이 시간</small></div></div><button class="btn primary full" onclick="start()">${resume&&selectedMode===appState.mode?'기존 시험 이어서 풀기':'시험 시작'}</button><div class="notice">진행 답안은 현재 기기의 브라우저에 자동 저장됩니다. 단, 시크릿 모드·기기 변경·브라우저 데이터 삭제 시 기록이 사라질 수 있습니다. 시험지의 배점과 2차 보기 구성은 자체 연습용입니다.</div></div></section>`}
 function questionWidget(q){let a=answer(q);
 if(q.type==='4지택일'||q.type==='진위형')return `<div class="choice-list">${q.choices.map(c=>`<button type="button" class="choice ${a===c?'selected':''}" onclick="choose(${JSON.stringify(c).replace(/"/g,'&quot;')})"><span class="bullet">${c.slice(0,1)}</span><span>${esc(c.slice(2))}</span></button>`).join('')}</div>`;

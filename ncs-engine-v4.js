@@ -202,6 +202,7 @@ start=makeStart;
 var originalSetupPage=setupPage;
 setupPage=function(){
  var html=originalSetupPage();
+ html=html.replace(/<label>난이도 <select[\s\S]*?<\/select><\/label>/,'<div><b>난이도:</b> 중하~중 중심 (실전 출제 비율 고정)</div>');
  html=html.replace('1차 단답·연결형 20문항은 형식 유지를 위해 고정됩니다.','1차 객관식·진위형·연결형·단답형도 매회 새 문제로 구성됩니다.');
  html=html.replace('하~중하','중하~중');
  html=html.replace('</button><div class="notice">진행 답안은 현재 기기의 브라우저에 자동 저장됩니다.',
@@ -260,4 +261,5 @@ examPage=function(){
  return html.replace('NCS 하~중하 실전 모의고사','NCS 연계 중하~중 예상 모의고사');
 };
 console.info('V4 exam engine activated: 104 concepts, 312 prompts, fresh papers with recent exclusion.');
+render();
 })();
